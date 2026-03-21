@@ -1,4 +1,5 @@
 import type { Dish, Review } from '../types'
+import { REVIEWERS } from '../types'
 import { computeRanking } from '../hooks/useRanking'
 import type { RankedDish } from '../hooks/useRanking'
 import StarRating from './StarRating'
@@ -36,7 +37,7 @@ function RankedDishCard({ ranked, position }: { ranked: RankedDish; position: nu
             <span className="text-olive font-medium">
               {Math.round(ranked.yesPercentage)}%
             </span>
-            <span>{ranked.reviewCount}/{6} reviews</span>
+            <span>{ranked.reviewCount}/{REVIEWERS.length} reviews</span>
           </div>
         </div>
       </div>
