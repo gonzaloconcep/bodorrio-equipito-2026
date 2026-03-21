@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase'
 import AddDishModal from './AddDishModal'
 import DishDetail from './DishDetail'
 import StarRating from './StarRating'
+import MissingReviewersBadge from './MissingReviewersBadge'
+import RankingView from './RankingView'
 
 interface Props {
   onBack: () => void
@@ -16,6 +18,7 @@ export default function AdminDashboard({ onBack }: Props) {
   const [loading, setLoading] = useState(true)
   const [showAddDish, setShowAddDish] = useState(false)
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null)
+  const [view, setView] = useState<'dishes' | 'ranking'>('dishes')
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -58,19 +61,33 @@ export default function AdminDashboard({ onBack }: Props) {
       <h1 className="text-2xl font-bold text-burgundy mb-1">
         Panel de Gonzalo 👨‍🍳
       </h1>
-      <p className="text-warm-gray mb-6">
+      <p className="text-warm-gray mb-4">
         Sube platos y mira las reviews de todos
       </p>
 
-      {/* Add dish button */}
-      <button
-        onClick={() => setShowAddDish(true)}
-        className="w-full py-4 mb-8 bg-olive text-white rounded-2xl text-lg font-semibold
-                   shadow-lg hover:bg-olive-light active:scale-[0.98] transition-all
-                   flex items-center justify-center gap-2"
-      >
-        📸 Subir nuevo plato
-      </button>
+      {/* View toggle */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setView('dishes')}
+          className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all ${
+            view === 'dishes'
+              ? 'bg-burgundy text-white'
+              : 'bg-white text-burgundy border border-burgundy'
+          }`}
+        >
+          Platos
+        </button>
+        <button
+          onClick={() => setView('ranking')}
+          className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all ${
+            view === 'ranking'
+              ? 'bg-burgundy text-white'
+              : 'bg-white text-burgundy border border-burgundy'
+          }`}
+        >
+          🏆 Top Platos
+        </button>
+      </div>
 
       {loading ? (
         <div className="text-center py-20 text-warm-gray-light text-lg">
@@ -83,76 +100,94 @@ export default function AdminDashboard({ onBack }: Props) {
             Aún no hay platos. ¡Sube el primero!
           </p>
         </div>
+      ) : view === 'ranking' ? (
+        <RankingView dishes={dishes} reviews={reviews} />
       ) : (
-        <div className="space-y-8">
-          {groupedDishes.map((group) => (
-            <div key={group.value}>
-              <h2 className="text-xl font-bold text-burgundy mb-3 flex items-center gap-2">
-                <span>{group.emoji}</span>
-                <span>{group.label}</span>
-              </h2>
-              <div className="space-y-3">
-                {group.dishes.map((dish) => {
-                  const dishReviews = getReviewsForDish(dish.id)
-                  const avg = dishReviews.length
-                    ? dishReviews.reduce((s, r) => s + r.stars, 0) / dishReviews.length
-                    : 0
-                  const yesCount = dishReviews.filter((r) => r.wedding_worthy).length
-                  const noCount = dishReviews.filter((r) => !r.wedding_worthy).length
+        <>
+          {/* Add dish button */}
+          <button
+            onClick={() => setShowAddDish(true)}
+            className="w-full py-4 mb-8 bg-olive text-white rounded-2xl text-lg font-semibold
+                       shadow-lg hover:bg-olive-light active:scale-[0.98] transition-all
+                       flex items-center justify-center gap-2"
+          >
+            📸 Subir nuevo plato
+          </button>
 
-                  return (
-                    <button
-                      key={dish.id}
-                      onClick={() => setSelectedDish(dish)}
-                      className="w-full bg-white rounded-2xl shadow-sm border border-cream-dark
-                                 overflow-hidden hover:shadow-md active:scale-[0.99] transition-all text-left"
-                    >
-                      <div className="flex items-center gap-4 p-4">
-                        {dish.image_url ? (
-                          <img
-                            src={dish.image_url}
-                            alt={dish.title}
-                            className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-20 h-20 bg-cream-dark rounded-xl flex items-center justify-center text-3xl flex-shrink-0">
-                            {CATEGORY_MAP[dish.category].emoji}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-burgundy truncate">{dish.title}</p>
-                          <div className="mt-1">
-                            {dishReviews.length > 0 ? (
-                              <>
-                                <div className="flex items-center gap-2">
-                                  <StarRating value={Math.round(avg)} size="sm" readonly />
-                                  <span className="text-xs text-warm-gray-light">
-                                    ({avg.toFixed(1)})
-                                  </span>
-                                </div>
-                                <p className="text-xs text-warm-gray mt-1">
-                                  {dishReviews.length}/{REVIEWERS.length} reviews
-                                  {' · '}
-                                  <span className="text-olive">{yesCount} sí</span>
-                                  {' · '}
-                                  <span className="text-burgundy">{noCount} no</span>
-                                </p>
-                              </>
-                            ) : (
-                              <p className="text-sm text-warm-gray-light">
-                                Sin reviews aún
-                              </p>
-                            )}
+          <div className="space-y-8">
+            {groupedDishes.map((group) => (
+              <div key={group.value}>
+                <h2 className="text-xl font-bold text-burgundy mb-3 flex items-center gap-2">
+                  <span>{group.emoji}</span>
+                  <span>{group.label}</span>
+                </h2>
+                <div className="space-y-3">
+                  {group.dishes.map((dish) => {
+                    const dishReviews = getReviewsForDish(dish.id)
+                    const avg = dishReviews.length
+                      ? dishReviews.reduce((s, r) => s + r.stars, 0) / dishReviews.length
+                      : 0
+                    const yesCount = dishReviews.filter((r) => r.wedding_worthy).length
+                    const noCount = dishReviews.filter((r) => !r.wedding_worthy).length
+
+                    return (
+                      <button
+                        key={dish.id}
+                        onClick={() => setSelectedDish(dish)}
+                        className="w-full bg-white rounded-2xl shadow-sm border border-cream-dark
+                                   overflow-hidden hover:shadow-md active:scale-[0.99] transition-all text-left"
+                      >
+                        <div className="flex items-center gap-4 p-4">
+                          {dish.image_url ? (
+                            <img
+                              src={dish.image_url}
+                              alt={dish.title}
+                              className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-20 h-20 bg-cream-dark rounded-xl flex items-center justify-center text-3xl flex-shrink-0">
+                              {CATEGORY_MAP[dish.category].emoji}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-burgundy truncate">{dish.title}</p>
+                            <div className="mt-1">
+                              {dishReviews.length > 0 ? (
+                                <>
+                                  <div className="flex items-center gap-2">
+                                    <StarRating value={Math.round(avg)} size="sm" readonly />
+                                    <span className="text-xs text-warm-gray-light">
+                                      ({avg.toFixed(1)})
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-warm-gray mt-1">
+                                    {dishReviews.length}/{REVIEWERS.length} reviews
+                                    {' · '}
+                                    <span className="text-olive">{yesCount} sí</span>
+                                    {' · '}
+                                    <span className="text-burgundy">{noCount} no</span>
+                                  </p>
+                                  <MissingReviewersBadge dishId={dish.id} reviews={reviews} />
+                                </>
+                              ) : (
+                                <>
+                                  <p className="text-sm text-warm-gray-light">
+                                    Sin reviews aún
+                                  </p>
+                                  <MissingReviewersBadge dishId={dish.id} reviews={reviews} />
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </button>
-                  )
-                })}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Add Dish Modal */}
