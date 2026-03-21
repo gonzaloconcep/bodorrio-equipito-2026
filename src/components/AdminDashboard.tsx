@@ -89,6 +89,18 @@ export default function AdminDashboard({ onBack }: Props) {
         </button>
       </div>
 
+      {/* Add dish button — always visible except in ranking view */}
+      {view === 'dishes' && (
+        <button
+          onClick={() => setShowAddDish(true)}
+          className="w-full py-4 mb-8 bg-olive text-white rounded-2xl text-lg font-semibold
+                     shadow-lg hover:bg-olive-light active:scale-[0.98] transition-all
+                     flex items-center justify-center gap-2"
+        >
+          📸 Subir nuevo plato
+        </button>
+      )}
+
       {loading ? (
         <div className="text-center py-20 text-warm-gray-light text-lg">
           Cargando... 🍽️
@@ -103,18 +115,7 @@ export default function AdminDashboard({ onBack }: Props) {
       ) : view === 'ranking' ? (
         <RankingView dishes={dishes} reviews={reviews} />
       ) : (
-        <>
-          {/* Add dish button */}
-          <button
-            onClick={() => setShowAddDish(true)}
-            className="w-full py-4 mb-8 bg-olive text-white rounded-2xl text-lg font-semibold
-                       shadow-lg hover:bg-olive-light active:scale-[0.98] transition-all
-                       flex items-center justify-center gap-2"
-          >
-            📸 Subir nuevo plato
-          </button>
-
-          <div className="space-y-8">
+        <div className="space-y-8">
             {groupedDishes.map((group) => (
               <div key={group.value}>
                 <h2 className="text-xl font-bold text-burgundy mb-3 flex items-center gap-2">
@@ -187,7 +188,6 @@ export default function AdminDashboard({ onBack }: Props) {
               </div>
             ))}
           </div>
-        </>
       )}
 
       {/* Add Dish Modal */}
