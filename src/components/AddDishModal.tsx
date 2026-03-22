@@ -65,9 +65,9 @@ export default function AddDishModal({ onClose, onSaved }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center h-dvh">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-cream rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[90dvh] overflow-y-auto animate-slide-up">
+      <div className="relative bg-cream rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[90dvh] overflow-y-auto overscroll-contain animate-slide-up">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-burgundy">Nuevo plato 📸</h2>

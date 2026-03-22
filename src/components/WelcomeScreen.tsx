@@ -52,7 +52,7 @@ export default function WelcomeScreen({ onAdmin, onGuest }: Props) {
 
       {/* Emoji challenge modal */}
       {showEmojiChallenge && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center h-dvh">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowEmojiChallenge(false)} />
           <div className="relative bg-cream rounded-3xl p-8 max-w-xs w-full mx-4 animate-slide-up text-center">
             <h3 className="text-xl font-bold text-burgundy mb-2">
