@@ -12,12 +12,13 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     coverage: {
       provider: 'v8',
-      include: ['src/hooks/**', 'src/components/MissingReviewersBadge.tsx', 'src/components/RankingView.tsx'],
+      include: ['src/**'],
+      exclude: ['src/test/**', 'src/main.tsx', 'src/lib/supabase.ts'],
       thresholds: {
-        lines: 80,
-        functions: 80,
-        branches: 80,
-        statements: 80,
+        lines: 90,
+        functions: 90,
+        branches: 85,
+        statements: 90,
       },
     },
   },

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { Dish, Review, Reviewer } from '../types'
+import type { Category, Dish, Review, Reviewer } from '../types'
 import { CATEGORIES, CATEGORY_MAP } from '../types'
 import { supabase } from '../lib/supabase'
 import ReviewModal from './ReviewModal'
@@ -16,6 +16,8 @@ export default function GuestDashboard({ reviewer, onChangeGuest, onBack }: Prop
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null)
+  const [categoryFilter, setCategoryFilter] = useState<Category | 'todas'>('todas')
+  const [reviewFilter, setReviewFilter] = useState<'todas' | 'pendiente' | 'hecha'>('pendiente')
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -33,10 +35,17 @@ export default function GuestDashboard({ reviewer, onChangeGuest, onBack }: Prop
   const getReviewForDish = (dishId: string) =>
     reviews.find((r) => r.dish_id === dishId) ?? null
 
+  const filteredDishes = dishes.filter((d) => {
+    if (categoryFilter !== 'todas' && d.category !== categoryFilter) return false
+    if (reviewFilter === 'pendiente' && getReviewForDish(d.id)) return false
+    if (reviewFilter === 'hecha' && !getReviewForDish(d.id)) return false
+    return true
+  })
+
   const groupedDishes = CATEGORIES
     .map((cat) => ({
       ...cat,
-      dishes: dishes.filter((d) => d.category === cat.value),
+      dishes: filteredDishes.filter((d) => d.category === cat.value),
     }))
     .filter((g) => g.dishes.length > 0)
 
@@ -70,6 +79,52 @@ export default function GuestDashboard({ reviewer, onChangeGuest, onBack }: Prop
       >
         🔄 Actualizar platos
       </button>
+
+      {/* Filters */}
+      {!loading && dishes.length > 0 && (
+        <div className="mb-6 space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setCategoryFilter('todas')}
+              className={`py-1.5 px-3 rounded-xl text-sm font-medium transition-all ${
+                categoryFilter === 'todas'
+                  ? 'bg-burgundy text-white'
+                  : 'bg-white text-warm-gray border border-cream-dark'
+              }`}
+            >
+              Todas
+            </button>
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => setCategoryFilter(cat.value)}
+                className={`py-1.5 px-3 rounded-xl text-sm font-medium transition-all ${
+                  categoryFilter === cat.value
+                    ? 'bg-burgundy text-white'
+                    : 'bg-white text-warm-gray border border-cream-dark'
+                }`}
+              >
+                {cat.emoji} {cat.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            {([['todas', 'Todas'], ['pendiente', 'Pendientes'], ['hecha', 'Hechas']] as const).map(([value, label]) => (
+              <button
+                key={value}
+                onClick={() => setReviewFilter(value)}
+                className={`py-1.5 px-3 rounded-xl text-sm font-medium transition-all ${
+                  reviewFilter === value
+                    ? 'bg-gold text-white'
+                    : 'bg-white text-warm-gray border border-cream-dark'
+                }`}
+              >
+                {value === 'pendiente' ? '⭐ ' : value === 'hecha' ? '✅ ' : ''}{label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-20 text-warm-gray-light text-lg">
@@ -143,13 +198,24 @@ export default function GuestDashboard({ reviewer, onChangeGuest, onBack }: Prop
       {/* Review Modal */}
       {selectedDish && (
         <ReviewModal
+          key={selectedDish.id}
           dish={selectedDish}
           reviewer={reviewer}
           existingReview={getReviewForDish(selectedDish.id)}
+          hasNext={dishes.some((d) => d.id !== selectedDish.id && !getReviewForDish(d.id))}
           onClose={() => setSelectedDish(null)}
           onSaved={() => {
             setSelectedDish(null)
             fetchData()
+          }}
+          onSavedAndNext={async () => {
+            const freshReviews = (await supabase.from('reviews').select('*').eq('reviewer', reviewer)).data ?? []
+            const reviewedIds = new Set(freshReviews.map((r) => r.dish_id))
+            reviewedIds.add(selectedDish.id)
+            const next = dishes.find((d) => d.id !== selectedDish.id && !reviewedIds.has(d.id))
+            setReviews(freshReviews)
+            setSelectedDish(next ?? null)
+            if (!next) fetchData()
           }}
         />
       )}

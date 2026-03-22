@@ -1,73 +1,113 @@
-# React + TypeScript + Vite
+# Bodorrio 2026 - Prueba de Menu
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+App web para que los invitados de la boda puntuen los platos de la prueba de menu y elijan cuales van a la boda.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 19** + TypeScript
+- **Tailwind CSS 4** (via Vite plugin)
+- **Supabase** (PostgreSQL + Storage para fotos)
+- **Vite 8** (dev server + build)
+- **Vitest** (unit tests) + **Playwright** (e2e, WebKit/iOS)
 
-## React Compiler
+## Funcionalidades
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Invitados
+- Seleccion de usuario (6 invitados)
+- Listado de platos agrupados por categoria (entrante, primero, segundo, postre, vino)
+- Filtros combinables por categoria y estado de review (pendiente/hecha)
+- Review de cada plato: puntuacion con estrellas (1-5), si/no boda, comentarios
+- "Guardar y siguiente review" para encadenar reviews sin salir del modal
+- Filtro de pendientes activado por defecto para facilitar el flujo
 
-## Expanding the ESLint configuration
+### Admin (Gonzalo)
+- Subir platos con foto desde el movil
+- Ver todas las reviews de todos los invitados
+- Badge de reviewers que faltan por plato
+- Ranking de platos por puntuacion media y votos "si boda"
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Desarrollo
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```bash
+# Instalar dependencias
+npm install
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# Servidor de desarrollo
+npm run dev
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Build de produccion
+npm run build
+
+# Tests unitarios
+npm run test
+
+# Tests unitarios con cobertura
+npm run test:coverage
+
+# Tests e2e (requiere npx playwright install webkit)
+npm run test:e2e
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Variables de entorno
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Crea un fichero `.env` en la raiz:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=tu-anon-key
+```
+
+## Estructura del proyecto
+
+```
+src/
+  App.tsx              # Router principal (welcome, guest-select, guest, admin)
+  components/
+    WelcomeScreen.tsx  # Pantalla inicial con acceso invitado/admin
+    GuestSelect.tsx    # Seleccion de invitado
+    GuestDashboard.tsx # Dashboard del invitado con filtros y cards
+    ReviewModal.tsx    # Modal de review con "guardar y siguiente"
+    AdminDashboard.tsx # Dashboard admin con vista platos y ranking
+    AddDishModal.tsx   # Modal para subir platos con foto
+    DishDetail.tsx     # Detalle de plato con todas las reviews
+    StarRating.tsx     # Componente reutilizable de estrellas
+    RankingView.tsx    # Vista ranking por categoria
+    MissingReviewersBadge.tsx  # Badge de reviewers pendientes
+  hooks/
+    useBodyScrollLock.ts    # Bloqueo de scroll al abrir modales
+    useRanking.ts           # Logica de ranking
+    useMissingReviewers.ts  # Logica de reviewers pendientes
+  types/
+    index.ts           # Tipos, constantes y mapas
+e2e/
+  modal-visibility.spec.ts  # Test e2e de visibilidad de modales en iOS
+```
+
+## Base de datos (Supabase)
+
+### Tabla `dishes`
+| Campo | Tipo |
+|-------|------|
+| id | uuid (PK) |
+| title | text |
+| category | text (entrante, primero, segundo, postre, vino) |
+| image_url | text (nullable) |
+| active | boolean |
+| created_at | timestamptz |
+
+### Tabla `reviews`
+| Campo | Tipo |
+|-------|------|
+| id | uuid (PK) |
+| dish_id | uuid (FK dishes) |
+| reviewer | text |
+| stars | integer (1-5) |
+| wedding_worthy | boolean |
+| comments | text (nullable) |
+| created_at | timestamptz |
+
+Unique constraint en `(dish_id, reviewer)` para upsert.
+
+## Licencia
+
+Proyecto privado para uso personal.
