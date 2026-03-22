@@ -52,9 +52,9 @@ export default function ReviewModal({ dish, reviewer, existingReview, onClose, o
   const cat = CATEGORY_MAP[dish.category]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center h-dvh">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-cream rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[90dvh] overflow-y-auto animate-slide-up">
+      <div className="relative bg-cream rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[90dvh] overflow-y-auto overscroll-contain animate-slide-up">
         <div className="p-6">
           {/* Header */}
           <div className="flex justify-between items-start mb-4">
