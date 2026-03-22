@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { Dish, Review, Reviewer } from '../types'
 import { CATEGORY_MAP } from '../types'
 import { supabase } from '../lib/supabase'
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock'
 import StarRating from './StarRating'
 
 interface Props {
@@ -22,10 +23,7 @@ export default function ReviewModal({ dish, reviewer, existingReview, onClose, o
 
   const canSubmit = stars > 0 && weddingWorthy !== null && !saving
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
-  }, [])
+  useBodyScrollLock()
 
   const handleSubmit = async () => {
     if (!canSubmit) return

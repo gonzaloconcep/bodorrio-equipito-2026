@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import type { Category } from '../types'
 import { CATEGORIES } from '../types'
 import { supabase } from '../lib/supabase'
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock'
 
 interface Props {
   onClose: () => void
@@ -16,10 +17,7 @@ export default function AddDishModal({ onClose, onSaved }: Props) {
   const [saving, setSaving] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
-  }, [])
+  useBodyScrollLock()
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -125,7 +123,6 @@ export default function AddDishModal({ onClose, onSaved }: Props) {
               ref={fileRef}
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={handleImageChange}
               className="hidden"
             />

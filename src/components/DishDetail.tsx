@@ -1,7 +1,7 @@
 import type { Dish, Review } from '../types'
 import { CATEGORY_MAP, REVIEWERS } from '../types'
 import StarRating from './StarRating'
-import { useEffect } from 'react'
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock'
 
 interface Props {
   dish: Dish
@@ -18,10 +18,7 @@ export default function DishDetail({ dish, reviews, onClose }: Props) {
   const yesCount = dishReviews.filter((r) => r.wedding_worthy).length
   const noCount = dishReviews.filter((r) => !r.wedding_worthy).length
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
-  }, [])
+  useBodyScrollLock()
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
