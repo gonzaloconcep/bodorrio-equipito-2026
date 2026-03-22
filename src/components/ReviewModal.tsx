@@ -9,11 +9,13 @@ interface Props {
   dish: Dish
   reviewer: Reviewer
   existingReview: Review | null
+  hasNext: boolean
   onClose: () => void
   onSaved: () => void
+  onSavedAndNext: () => void
 }
 
-export default function ReviewModal({ dish, reviewer, existingReview, onClose, onSaved }: Props) {
+export default function ReviewModal({ dish, reviewer, existingReview, hasNext, onClose, onSaved, onSavedAndNext }: Props) {
   const [stars, setStars] = useState(existingReview?.stars ?? 0)
   const [weddingWorthy, setWeddingWorthy] = useState<boolean | null>(
     existingReview?.wedding_worthy ?? null
@@ -25,7 +27,7 @@ export default function ReviewModal({ dish, reviewer, existingReview, onClose, o
 
   useBodyScrollLock()
 
-  const handleSubmit = async () => {
+  const save = async (then: () => void) => {
     if (!canSubmit) return
     setSaving(true)
 
@@ -46,7 +48,7 @@ export default function ReviewModal({ dish, reviewer, existingReview, onClose, o
       alert('Error al guardar: ' + error.message)
       return
     }
-    onSaved()
+    then()
   }
 
   const cat = CATEGORY_MAP[dish.category]
@@ -133,17 +135,32 @@ export default function ReviewModal({ dish, reviewer, existingReview, onClose, o
           </div>
 
           {/* Submit */}
-          <button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className={`w-full py-4 rounded-2xl text-lg font-semibold transition-all
-              ${canSubmit
-                ? 'bg-gold text-white shadow-lg hover:bg-gold-dark active:scale-[0.98]'
-                : 'bg-cream-dark text-warm-gray-light cursor-not-allowed'
-              }`}
-          >
-            {saving ? 'Guardando...' : existingReview ? 'Actualizar review ✏️' : 'Enviar review 🍽️'}
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={() => save(onSaved)}
+              disabled={!canSubmit}
+              className={`w-full py-4 rounded-2xl text-lg font-semibold transition-all
+                ${canSubmit
+                  ? 'bg-gold text-white shadow-lg hover:bg-gold-dark active:scale-[0.98]'
+                  : 'bg-cream-dark text-warm-gray-light cursor-not-allowed'
+                }`}
+            >
+              {saving ? 'Guardando...' : existingReview ? 'Actualizar review ✏️' : 'Enviar review 🍽️'}
+            </button>
+            {hasNext && (
+              <button
+                onClick={() => save(onSavedAndNext)}
+                disabled={!canSubmit}
+                className={`w-full py-4 rounded-2xl text-lg font-semibold transition-all
+                  ${canSubmit
+                    ? 'bg-olive text-white shadow-lg hover:bg-olive-light active:scale-[0.98]'
+                    : 'bg-cream-dark text-warm-gray-light cursor-not-allowed'
+                  }`}
+              >
+                {saving ? 'Guardando...' : 'Guardar y siguiente review →'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

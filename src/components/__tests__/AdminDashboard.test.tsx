@@ -89,6 +89,103 @@ describe('AdminDashboard', () => {
     expect(screen.getByText('Subir nuevo plato', { exact: false })).toBeInTheDocument()
   })
 
+  it('shows empty state when no dishes', async () => {
+    render(<AdminDashboard onBack={onBack} />)
+    await waitFor(() => {
+      expect(screen.getByText(/Aún no hay platos/)).toBeInTheDocument()
+    })
+  })
+
+  it('clicking a dish opens DishDetail', async () => {
+    const dish = makeDish({ id: 'admin-detail', title: 'Detalle Dish', category: 'entrante' })
+    mockDishes.push(dish)
+    mockReviews.push(makeReview({ dish_id: 'admin-detail', reviewer: 'Marta', stars: 3 }))
+
+    render(<AdminDashboard onBack={onBack} />)
+    await waitFor(() => {
+      expect(screen.getByText('Detalle Dish')).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByText('Detalle Dish'))
+    // DishDetail modal should appear with close button (✕)
+    await waitFor(() => {
+      expect(screen.getByText('✕')).toBeInTheDocument()
+    })
+  })
+
+  it('clicking ✕ closes DishDetail', async () => {
+    const dish = makeDish({ id: 'admin-close', title: 'Close Dish', category: 'entrante' })
+    mockDishes.push(dish)
+
+    render(<AdminDashboard onBack={onBack} />)
+    await waitFor(() => {
+      expect(screen.getByText('Close Dish')).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByText('Close Dish'))
+    await waitFor(() => {
+      expect(screen.getByText('✕')).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText('✕'))
+    // Modal should close
+  })
+
+  it('clicking "Subir nuevo plato" shows AddDishModal', async () => {
+    render(<AdminDashboard onBack={onBack} />)
+    await waitFor(() => {
+      expect(screen.getByText(/Subir nuevo plato/)).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText(/Subir nuevo plato/))
+    // AddDishModal should open - it has "Nuevo plato" heading
+    await waitFor(() => {
+      expect(screen.getByText(/Nuevo plato/)).toBeInTheDocument()
+    })
+  })
+
+  it('clicking ← Inicio calls onBack', async () => {
+    render(<AdminDashboard onBack={onBack} />)
+    await waitFor(() => {
+      expect(screen.getByText(/Inicio/)).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText(/Inicio/))
+    expect(onBack).toHaveBeenCalled()
+  })
+
+  it('clicking Actualizar re-fetches data', async () => {
+    const dish = makeDish({ id: 'admin-refresh', title: 'Refresh Dish', category: 'entrante' })
+    mockDishes.push(dish)
+
+    render(<AdminDashboard onBack={onBack} />)
+    await waitFor(() => {
+      expect(screen.getByText('Refresh Dish')).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText(/Actualizar/))
+    await waitFor(() => {
+      expect(screen.getByText('Refresh Dish')).toBeInTheDocument()
+    })
+  })
+
+  it('shows dish with image when image_url is present', async () => {
+    const dish = makeDish({ id: 'admin-img', title: 'Image Dish', category: 'entrante', image_url: 'http://img.jpg' })
+    mockDishes.push(dish)
+
+    render(<AdminDashboard onBack={onBack} />)
+    await waitFor(() => {
+      expect(screen.getByAltText('Image Dish')).toBeInTheDocument()
+    })
+  })
+
+  it('shows "Sin reviews aún" for dish without reviews', async () => {
+    const dish = makeDish({ id: 'admin-noreview', title: 'No Review Dish', category: 'entrante' })
+    mockDishes.push(dish)
+
+    render(<AdminDashboard onBack={onBack} />)
+    await waitFor(() => {
+      expect(screen.getByText('No Review Dish')).toBeInTheDocument()
+    })
+    expect(screen.getByText(/Sin reviews aún/)).toBeInTheDocument()
+  })
+
   it('ranking shows dishes ordered by stars', async () => {
     const d1 = makeDish({ id: 'admin-4a', title: 'Peor', category: 'entrante' })
     const d2 = makeDish({ id: 'admin-4b', title: 'Mejor', category: 'entrante' })
